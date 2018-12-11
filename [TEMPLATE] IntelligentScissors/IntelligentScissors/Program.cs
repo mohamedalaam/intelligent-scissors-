@@ -23,18 +23,26 @@ namespace IntelligentScissors
         {
             return i * w + j;
         }
-        public static List<List<Tuple<int, double>>> Build_Graph()
+     public static List<List<Tuple<int, double>>> Build_Graph()
         {
             RGBPixel[,] Matrix = MainForm.ImageMatrix;
             int height = ImageOperations.GetHeight(Matrix);
             int width = ImageOperations.GetHeight(Matrix);
-            List<List<Tuple<int, double>>> adjlist = new List<List<Tuple<int, double>>>(width * height + 5);
-
+ 
+            List<List<Tuple<int, double>>> adjlist = new List<List<Tuple<int, double>>>( new List<Tuple<int,double>>[width*height+10] );
+            for(int i=0;i<adjlist.Count;++i)
+            {
+ 
+                adjlist[i] = new List<Tuple<int, double>>(5);
+ 
+            }
+            //adjlist.AddRange(Enumerable.Repeat(default(null), width * height+5));
+            Console.WriteLine(adjlist.Count);
             //Matrix = ImageOperations.GaussianFilter1D(Matrix, 3, 1);
             //Building Graph
             for (int i=0;i<height;++i)
             {
-
+ 
                 for (int j = 0; j < width; ++j)
                 {
                     Vector2D energies = ImageOperations.CalculatePixelEnergies(i, j, Matrix);
@@ -43,14 +51,14 @@ namespace IntelligentScissors
                     int cur_node = generate_id(i, j, width);
                     int X_next = generate_id(i, j + 1, width);
                     int Y_next = generate_id(i + 1, j, width);
-                    adjlist[cur_node] = new List<Tuple<int, double>>();
+                    //adjlist.Add(new List<Tuple<int, double>>());
                     //not border pixels
                     if (i<height-1&&j<width-1)
                     {
-                        adjlist[cur_node].Add(new Tuple<int, double>(X_next, Gx));
-                        adjlist[cur_node].Add(new Tuple<int, double>(Y_next, Gy));
-                        adjlist[X_next].Add(new Tuple<int, double>(cur_node, Gx));
-                        adjlist[Y_next].Add(new Tuple<int, double>(cur_node, Gy));
+                        adjlist.ElementAt(cur_node).Add(new Tuple<int, double>(X_next, Gx));
+                        adjlist.ElementAt(cur_node).Add(new Tuple<int, double>(Y_next, Gy));
+                        adjlist.ElementAt(X_next).Add(new Tuple<int, double>(cur_node, Gx));
+                        adjlist.ElementAt(Y_next).Add(new Tuple<int, double>(cur_node, Gy));
                     }
                     else
                     {

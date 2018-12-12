@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-
+using System.IO;
 namespace IntelligentScissors
 {
     static class Program
@@ -10,7 +11,8 @@ namespace IntelligentScissors
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-
+        public static List<List<Tuple<int, double>>> adjlist;
+       
         [STAThread]
         static void Main()
         {
@@ -23,35 +25,30 @@ namespace IntelligentScissors
         {
             return i * w + j;
         }
-     public static List<List<Tuple<int, double>>> Build_Graph()
+        public static void Build_Graph()
         {
             RGBPixel[,] Matrix = MainForm.ImageMatrix;
             int height = ImageOperations.GetHeight(Matrix);
-            int width = ImageOperations.GetHeight(Matrix);
- 
-            List<List<Tuple<int, double>>> adjlist = new List<List<Tuple<int, double>>>( new List<Tuple<int,double>>[width*height+10] );
+            int width = ImageOperations.GetWidth(Matrix);
+            Console.WriteLine(height + " " + width);
+            //List<List<Tuple<int, double>>> 
+                adjlist = new List<List<Tuple<int, double>>>( new List<Tuple<int,double>>[width*height+10] );
             for(int i=0;i<adjlist.Count;++i)
             {
- 
                 adjlist[i] = new List<Tuple<int, double>>(5);
- 
             }
-            //adjlist.AddRange(Enumerable.Repeat(default(null), width * height+5));
-            Console.WriteLine(adjlist.Count);
-            //Matrix = ImageOperations.GaussianFilter1D(Matrix, 3, 1);
             //Building Graph
             for (int i=0;i<height;++i)
             {
- 
+
                 for (int j = 0; j < width; ++j)
                 {
-                    Vector2D energies = ImageOperations.CalculatePixelEnergies(i, j, Matrix);
-                    double Gx = Gx = 1 / energies.X, Gy = Gy = 1 / energies.Y;
+                    Vector2D energies = ImageOperations.CalculatePixelEnergies(j, i, Matrix);
+                    double Gx = 1 / energies.X, Gy = 1 / energies.Y;
                     // creating node for every pixel 
-                    int cur_node = generate_id(i, j, width);
-                    int X_next = generate_id(i, j + 1, width);
-                    int Y_next = generate_id(i + 1, j, width);
-                    //adjlist.Add(new List<Tuple<int, double>>());
+                    int cur_node = generate_id(i, j,width);
+                    int X_next = generate_id(i, j+1 ,width);
+                    int Y_next = generate_id(i + 1, j,width);
                     //not border pixels
                     if (i<height-1&&j<width-1)
                     {
@@ -80,46 +77,106 @@ namespace IntelligentScissors
                     }
                 }
             }
-            int[] parent1 = new int[1000000];
-            bool[] vis = new bool[1000000];
-            double[] values = new double[1000000];
+           
+            for(int i=0;i<adjlist.Count;++i)
+            {
+                Console.Write(i + " ");
+                for (int j = 0; j < adjlist[i].Count;++j)
+                {
+                    Console.Write(adjlist[i][j].Item1 + " "+  adjlist[i][j].Item2 + " ");
+                }
+                Console.WriteLine();
+            }
+            
+        }
+        public static void WriteFileOutput(List<List<Tuple<int, double>>> L, int size)
+        {
+            FileStream FS = new FileStream("Output.txt", FileMode.Create, FileAccess.Write);
+            StreamWriter SW = new StreamWriter(FS);
+            SW.Write("The constructed graph");
+            SW.WriteLine();
+            for (int i = 0; i < size; i++)
+            {
+                SW.WriteLine("The index node" + i);
+                SW.WriteLine("Edges");
+                for (int j = 0; j < L[i].Count; j++)
+                {
+                    SW.WriteLine("edge from " + i + " to " + L[i][j].Item1 + "with weights" + L[i][j].Item2);
+                }
+                SW.WriteLine();
+            }
+            SW.Close();
+            FS.Close();
+        }
+        public static void WriteFilePath(List<int> L, int size,int width, int src,int dest)
+        {
+            FileStream FS = new FileStream("Path.txt", FileMode.Create, FileAccess.Write);
+            StreamWriter SW = new StreamWriter(FS);
+            int x = src / width;
+            int y = src - (x * width);
+            int x1 = dest/ width;
+            int y1 = dest- (x * width);
+            SW.WriteLine("The Shortest path from Node" + src+ " at position  " + x + " " + y +
+                " The Shortest path to Node  "+dest + " at position "+x1+" "+y1);
+            for (int i=L.Count-1;i>=0;i--)
+            {
+                 x = L[i] / width;
+                 y = L[i] - (x * width);
+                SW.WriteLine("Node" + "{X=" + x+"," + " Y=" + y+"}"+"at position "+" x"+"at position"+"y"+y);
+            }
+            SW.Close();
+            FS.Close();
+        }
+        public  static void shortest_path(int x,int y)
+        {
+
+            int width = ImageOperations.GetWidth(MainForm.ImageMatrix);
+            int height = ImageOperations.GetHeight(MainForm.ImageMatrix);
+            Console.WriteLine(x + " " + y);
+            int starting_node = generate_id(x, y, ImageOperations.GetWidth(MainForm.ImageMatrix));
+            int[] parent1 = new int[width*height+5];
+            bool[] vis = new bool[width*height +5];
+            double[] values = new double[width*height+5];
+            for(int i=0;i<width*height+2;++i)
+            {
+                values[i] = double.MaxValue;
+            }
             PriorityQueue q = new PriorityQueue();
-            Node_info n = new Node_info(1, -1, 0);
+            Node_info n = new Node_info(1258, -1, 0);
             q.Insert(n);
             while (!q.is_empty())
             {
-                 n = q.poll();
-
+                n = q.poll();
                 double val = Convert.ToDouble(n.get_item3());
                 int cur = Convert.ToInt32(n.get_item1());
-               int par = Convert.ToInt32(n.get_item2());
+                int par = Convert.ToInt32(n.get_item2());
+                    if (vis[cur]) { continue; }
                 vis[cur] = true;
+                values[cur] = val;
                 parent1[cur] = par;
                 for (int i = 0; i < adjlist[cur].Count; i++)
                 {
-                    double x = adjlist[cur][i].Item2;
-                    x += val;
-                    Node_info n1 = new Node_info(adjlist[cur][i].Item1, cur, x);
-
-                if (vis[adjlist[cur][i].Item1]) { continue; }
+                    double weight = adjlist[cur][i].Item2;
+                    weight += val;
+                    Node_info n1 = new Node_info(adjlist[cur][i].Item1, cur, weight);
                     q.Insert(n1);
-                    
                 }
-
-
+            }
+            List<int> Par=new List<int>();
+            int nn = 4334;
+            while (parent1[nn] != -1)
+            {
+                Console.WriteLine(parent1[nn]);
+                Par.Add(parent1[nn]);
+                nn = parent1[nn];
 
             }
-
-
-
-
-
-
-            return adjlist;
+            WriteFilePath(Par, Par.Count, width, 1258,4334);
+            WriteFileOutput(adjlist,height);
         }
-
-      
+     
     }
+    
     // pair class to create an object you must specify 2 values the first is double the second is integer
     public class Node_info 
     {

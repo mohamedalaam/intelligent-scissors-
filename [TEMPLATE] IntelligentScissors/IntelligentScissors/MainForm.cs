@@ -29,20 +29,39 @@ namespace IntelligentScissors
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
+            Program.Build_Graph();
         }
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
-
-            Program.Build_Graph();
-            double sigma = double.Parse(txtGaussSigma.Text);
+            
+            /*double sigma = double.Parse(txtGaussSigma.Text);
             int maskSize = (int)nudMaskSize.Value ;
             ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
-            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);*/
         }
 
         public void pictureBox2_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            MouseEventArgs me = (MouseEventArgs)e;
+            Point coordinates = me.Location;
+             Program.shortest_path(coordinates.X,coordinates.Y);
+            
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+
 
         }
     }
